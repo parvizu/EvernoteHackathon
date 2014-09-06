@@ -1,5 +1,5 @@
-var iframe = $(".gwt-Frame")[0];
-var text = $(iframe).contents().find(".ennote div").text();
+// var iframe = $(".gwt-Frame")[0];
+// var text = $(iframe).contents().find(".ennote div").text();
 
 var lastText = '',
 	currentText = '', 
