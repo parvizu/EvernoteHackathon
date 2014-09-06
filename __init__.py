@@ -16,6 +16,10 @@ def index():
 	username = user.username
 	return render_template('index.html', username=username)
 
+@app.route('/dummy')
+def dummy():
+	return render_template('dummy.html')
+
 @app.route('/login', methods=['POST'])
 def login():
 	if request.method == 'POST':
