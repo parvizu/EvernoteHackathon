@@ -235,13 +235,9 @@ def default_notbook():
 
 @app.route('/save_user_data',methods=['POST'])
 def save_user_data():
-	print request
 	print request.json
-	print request.form
-	input_db = json.load(request.json)
-
-	return "OK"
-
+	input_db = json.dumps(request.json)
+	#return "ok"
 
 
 def mergeByTimeStamp():

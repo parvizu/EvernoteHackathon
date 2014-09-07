@@ -3,6 +3,7 @@
 var lastText = '',
 	currentText = '', 
 	textStartTime, 
+	startTime,
 	textEndTime;
 
 var log = {};
@@ -14,6 +15,7 @@ $(document).ready(function() {
 	$('#btn_session_start').click(function() {
 		$.post('http://127.0.0.1:5000/enter_group', { groupid: $('#session_id').val() }, function( data ) {
 			console.log(data);
+			startTime = $.now();
 			setTimeout(function() {
 				console.log("Extension loaded");
 				//$("#gwt-debug-sharingBar").next().next().html('<div id="output"><h1>Log:</h1></div>');
@@ -29,7 +31,7 @@ $(document).ready(function() {
 		$('#btn_session_end').hide();
 		$('#btn_session_start').show();
 
-		sendData();
+		//sendData();
 	})
 
 	
@@ -74,7 +76,10 @@ function collectText(input, time) {
 				if (addedText != '')
 				{
 					log[textStartTime] = logEntry;
+					var entry = {}
+					entry[$.now()] = logEntry;
 					console.log(JSON.stringify(logEntry))
+					sendEntry(entry);
 
 					lastText = input;
 					currentText = '';
@@ -92,9 +97,9 @@ function collectText(input, time) {
 					var newInput = getText();
 					// var newInput = $("#textInput").val();
 					collectText(newInput,$.now());
-				},2000);
+				},3000);
 			}
-		},2000)
+		},3000)
 	}
 }
 
@@ -112,12 +117,29 @@ function getTextDifference(input, old) {
 	return input.slice(old.length);
 }
 
+
+function sendEntry(entry)
+{
+	console.log(JSON.stringify(entry));
+	$.ajax({
+		url: "http://127.0.0.1:5000/save_user_data",
+		type: "POST",
+		contentType: 'application/json; charset=utf-8',
+		dataType: 'json',
+		data: JSON.stringify(entry),
+		success: function(data) {
+			console.log(data);
+		}
+	})
+}
+
 function sendData()
 {
 	var newData ={}
+
 	newData[$(".User-nameText").text()] = log;
 	console.log("DATA SENT")
-	console.log(newData);
+	console.log(JSON.stringify(newData));
 	$.ajax({
 		url: "http://127.0.0.1:5000/save_user_data",
 		type: "POST",
