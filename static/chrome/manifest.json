@@ -1,0 +1,16 @@
+{
+  "manifest_version": 2,
+
+  "name": "TimeNote",
+  "description": "This extension will extend Evernote functionalities to join notes from different users in a timeline.",
+  "version": "1.0",
+  "content_scripts": [ {
+    "all_frames": true,
+    "js": [ "jquery-1.11.0.min.js","collector.js" ],
+    "matches": [ "http://*/*", "https://*/*" ]
+  } ],
+  "browser_action": {
+    "default_icon": "icon.png",
+    "default_popup": "popup.html"
+  }
+}
