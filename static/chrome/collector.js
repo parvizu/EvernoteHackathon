@@ -70,21 +70,24 @@ function collectText(input, time) {
 					'guid': getUrl(),
 					'userid': $(".User-nameText").text()
 				};
-				
-				lastText = input;
-				currentText = '';
-				textStartTime = '';
-				textEndTime = '';
 
 				if (addedText != '')
 				{
 					log[textStartTime] = logEntry;
 					console.log(JSON.stringify(logEntry))
+
+					lastText = input;
+					currentText = '';
+					textStartTime = '';
+					textEndTime = '';
 				}
 				collectText(currentText,$.now());
 			} 
 			else {
 				currentText = input;
+				if(textStartTime == '')
+					textStartTime = $.now();
+
 				setTimeout(function() {
 					var newInput = getText();
 					// var newInput = $("#textInput").val();
@@ -118,7 +121,9 @@ function sendData()
 	$.ajax({
 		url: "http://127.0.0.1:5000/save_user_data",
 		type: "POST",
-		data: newData,
+		contentType: 'application/json; charset=utf-8',
+		dataType: 'json',
+		data: JSON.stringify(newData),
 		success: function(data) {
 			console.log(data);
 			log = '';

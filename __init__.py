@@ -176,11 +176,6 @@ def auth_start():
     return redirect('%s?oauth_token=%s' % (EN_AUTHORIZE_URL,
         urllib.quote(session['oauth_token'])))
 
-@app.route('/save_user_data',methods=['POST'])
-def save_user_data():
-	return "Saved"
-
-
 @app.route('/authComplete')
 def auth_finish():
     """After the user has authorized this application on Evernote's website,
@@ -230,19 +225,22 @@ def default_notbook():
     notes = noteStore.findNotesMetadata(authToken, nfilter, 0, 100, result_spec)
     print notes
     for note in notes.notes:
-<<<<<<< HEAD
-     if note.guid == "e00c1b8b-cc4f-48b5-bdbb-5f6069dbbc4a":
-      fullnote = noteStore.getNote(authToken,note.guid,True,True,True,True)
-      resources = fullnote.resources
+     	if note.guid == "e00c1b8b-cc4f-48b5-bdbb-5f6069dbbc4a":
+      		fullnote = noteStore.getNote(authToken,note.guid,True,True,True,True)
+      		resources = fullnote.resources
 
     syncState = noteStore.getSyncState(authToken)
     mergeByTimeStamp()
     return resources[0].guid
 
 @app.route('/save_user_data',methods=['POST'])
-def saveUserData():
-    incomingJson = request.get_json()
-    input_db = json.loads(incomingJson)
+def save_user_data():
+	print request
+	print request.json
+	print request.form
+	input_db = json.load(request.json)
+
+	return "OK"
 
 
 
