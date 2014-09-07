@@ -8,12 +8,33 @@ var lastText = '',
 var log = {};
 
 $(document).ready(function() {
-	setTimeout(function() {
-		console.log("Extension loaded");
-		//$("#gwt-debug-sharingBar").next().next().html('<div id="output"><h1>Log:</h1></div>');
-		loadEvents();
-	},1000);
+	
+	$('body').prepend("<div style='position: absolute;left:200px;z-index:100;'>Enter Group Session ID: <input id='session_id' type='text' width='200'><input id='btn_session_start' type='button' value='Start'><input id='btn_session_end' type='button' value='Stop'></div>");
+
+	$('#btn_session_start').click(function() {
+		$.post('http://127.0.0.1:5000/enter_group', { groupid: $('#session_id').val() }, function( data ) {
+			console.log(data);
+			setTimeout(function() {
+				console.log("Extension loaded");
+				//$("#gwt-debug-sharingBar").next().next().html('<div id="output"><h1>Log:</h1></div>');
+				loadEvents();
+			},1000);
+			$('#btn_session_start').hide();
+			$('#btn_session_end').show();
+		});
+	});
+
+	$('#btn_session_end').click(function() {
+		currentText ="&&%%$$";
+		$('#btn_session_end').hide();
+		$('#btn_session_start').show();
+
+		sendData();
+	})
+
+	
 });
+
 
 function getText()
 {
@@ -36,41 +57,42 @@ function loadEvents() {
 }
 
 function collectText(input, time) {
-	setTimeout(function() {
-		input = getText();
-		//console.log(getText());
-		if (input == currentText && input != '') {
-			var addedText = getTextDifference(input, lastText)
-			var logEntry = {
-				'start':formatTimeOfDay(textStartTime),
-				'text':addedText,
-				'end': formatTimeOfDay(time),
-				'guid': getUrl(),
-				'userid': $(".User-nameText").text()
-			};
-			
-			lastText = input;
-			currentText = '';
-			textStartTime = '';
-			textEndTime = '';
+	if(currentText != "&&%%$$") {
+		setTimeout(function() {
+			input = getText();
+			//console.log(getText());
+			if (input == currentText && input != '') {
+				var addedText = getTextDifference(input, lastText)
+				var logEntry = {
+					'start':textStartTime,
+					'text':addedText,
+					'end': time,
+					'guid': getUrl(),
+					'userid': $(".User-nameText").text()
+				};
+				
+				lastText = input;
+				currentText = '';
+				textStartTime = '';
+				textEndTime = '';
 
-			if (addedText != '')
-			{
-				log[textStartTime] = logEntry;
-				console.log(JSON.stringify(logEntry))
+				if (addedText != '')
+				{
+					log[textStartTime] = logEntry;
+					console.log(JSON.stringify(logEntry))
+				}
+				collectText(currentText,$.now());
+			} 
+			else {
+				currentText = input;
+				setTimeout(function() {
+					var newInput = getText();
+					// var newInput = $("#textInput").val();
+					collectText(newInput,$.now());
+				},2000);
 			}
-			collectText(currentText,$.now());
-		} 
-		else {
-			currentText = input;
-			setTimeout(function() {
-				var newInput = getText();
-				// var newInput = $("#textInput").val();
-				collectText(newInput,$.now());
-			},2000);
-		}
-		
-	},2000)
+		},2000)
+	}
 }
 
 function getUrl()
@@ -82,16 +104,6 @@ function getUrl()
 		res = t.slice(0,t.search("&"));
 	return res;
 }
-function formatTimeOfDay(millisSinceEpoch) {
-  var secondsSinceEpoch = (millisSinceEpoch / 1000) | 0;
-  var secondsInDay = ((secondsSinceEpoch % 86400) + 86400) % 86400;
-  var seconds = secondsInDay % 60;
-  var minutes = ((secondsInDay / 60) | 0) % 60;
-  var hours = (secondsInDay / 3600) | 0;
-  return hours + (minutes < 10 ? ":0" : ":")
-      + minutes + (seconds < 10 ? ":0" : ":")
-      + seconds;
-}
 
 function getTextDifference(input, old) {
 	return input.slice(old.length);
@@ -101,7 +113,8 @@ function sendData()
 {
 	var newData ={}
 	newData[$(".User-nameText").text()] = log;
-
+	console.log("DATA SENT")
+	console.log(newData);
 	$.ajax({
 		url: "http://127.0.0.1:5000/save_user_data",
 		type: "POST",

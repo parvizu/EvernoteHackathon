@@ -160,6 +160,10 @@ def auth_start():
     return redirect('%s?oauth_token=%s' % (EN_AUTHORIZE_URL,
         urllib.quote(session['oauth_token'])))
 
+@app.route('/save_user_data',methods=['POST'])
+def save_user_data():
+	return "Saved"
+
 
 @app.route('/authComplete')
 def auth_finish():
