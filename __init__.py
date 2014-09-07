@@ -4,6 +4,14 @@ from flask import render_template
 from flask import make_response
 from flask import session, redirect, url_for, request, escape
 
+import calendar
+import datetime
+import time
+import shelve
+import itertools
+import collections
+import json
+
 import urlparse
 import urllib
 
@@ -18,12 +26,17 @@ import oauth2 as oauth
 
 
 app = Flask(__name__)
+app.debug = True
+
+input_db = shelve.open("timenote.db")
+output_db = shelve.open("merge.db")
+
 
 APP_SECRET_KEY = \
     'I SCHOOL 4EVER'
 
-EN_CONSUMER_KEY = 'tim35050-0104'
-EN_CONSUMER_SECRET = 'f7248ba8d8526c52'
+EN_CONSUMER_KEY = 'ramitmalhotra'
+EN_CONSUMER_SECRET = '1f629b9e4f237fdd'
 
 EN_REQUEST_TOKEN_URL = 'https://sandbox.evernote.com/oauth'
 EN_ACCESS_TOKEN_URL = 'https://sandbox.evernote.com/oauth'
@@ -32,6 +45,9 @@ EN_AUTHORIZE_URL = 'https://sandbox.evernote.com/OAuth.action'
 EN_HOST = "sandbox.evernote.com"
 EN_USERSTORE_URIBASE = "https://" + EN_HOST + "/edam/user"
 EN_NOTESTORE_URIBASE = "https://" + EN_HOST + "/edam/note/"
+
+TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+
 
 def get_oauth_client(token=None):
     """Return an instance of the OAuth client."""
@@ -148,108 +164,59 @@ def default_notbook():
     noteStore = get_notestore()
     notebooks = noteStore.listNotebooks(authToken)
 
-    names = ''
     for notebook in notebooks:
         defaultNotebook = notebook
         break
 
-    print '---'
-    print '7d3611fe-29e6-4399-ae25-c3683a480fa9'
-    print '---'
     nfilter = NoteFilter()
     nfilter.notebookGuid = defaultNotebook.guid
     result_spec = NotesMetadataResultSpec(includeTitle=True)
     notes = noteStore.findNotesMetadata(authToken, nfilter, 0, 100, result_spec)
     print notes
     for note in notes.notes:
-    	print note
-    	print '---'
+     if note.guid == "e00c1b8b-cc4f-48b5-bdbb-5f6069dbbc4a":
+      fullnote = noteStore.getNote(authToken,note.guid,True,True,True,True)
+      resources = fullnote.resources
 
-    return defaultNotebook.name
+    syncState = noteStore.getSyncState(authToken)
+    mergeByTimeStamp()
+    return resources[0].guid
+
+@app.route('/save_user_data',methods=['POST'])
+def saveUserData():
+    incomingJson = request.get_json()
+    input_db = json.loads(incomingJson)
 
 
 
+def mergeByTimeStamp():
+    createDummyData()
+    timestampList = input_db.values()
+    tsList = list(itertools.chain(*timestampList))
+    print tsList
+    temp_dict = {}
+    for item in tsList:
+        temp_dict = parseDictList(item,temp_dict)
+    od = collections.OrderedDict(sorted(temp_dict.items()))
+    output_db = od
+    print od
 
 
-@app.route('/login', methods=['POST'])
-def login():
-	if request.method == 'POST':
-		if valid_login(request.form['email'], request.form['password']):
-			#result = get_user_login(request.form['email'], request.form['password'])
-			result = {'careId': 1}
-			if 'careId' in result:
-				careId = result['careId']
-				session['careId'] = careId
-				return redirect(url_for('myhealth'))
-			else:
-				error = 'Invalid username/password'
-				return render_template('index.html', error=error)
+def parseDictList(item,temp_dict):
+    for ts in item:
+        if temp_dict and temp_dict.has_key(ts):
+            temp_dict[ts].append(item.get(ts))
+        else:
+            valList = []
+            valList += [item.get(ts)]
+            temp_dict[ts] = valList
+    return temp_dict
 
-@app.route('/myhealth')
-def myhealth():
-	if 'careId' in session:
-		context = get_app_context()
-		careId = session['careId']
-		# UNCOMMENT THE FOLLOWING TO USE REAL DATA
-		#name = get_data(careId, 'Ptn4kebAo9')['data']['value']
-		#birthday = get_data(careId, 'Pt9nZWiTFa')['data']['value']
-		#birthday = birthday.split(' ')[0]
-		#gender = get_data(careId, 'PtDQzNlDgW')['data']['value']
-		#if gender == '1':
-		#	gender = "Male"
-		#else:
-		#	gender = "Female"
-		#context['name'] = name
-		#context['birthday'] = birthday
-		#context['gender'] = gender
-		context['name'] = "Theerapat Yangyuenthanasan"
-		context['years'] = "26"
-		context['gender'] = "Male"
-		context['weight'] = 74.84
-		context['height'] = 177.8
 
-		return render_template('app.html', context = context)
-	else:
-		return render_template('index.html')
-
-@app.route('/community')
-def community():
-	if 'careId' in session:
-		return render_template('community.html')
-	else:
-		return render_template('index.html')
-
-def get_user_login(username, password):
-	rips = RequestsIPS()
-	result = rips.login(username, password)
-	return result.json()
-
-def register_new_user():
-	rips = RequestsIPS()
-	result = rips.add_new_user('tim35050@gmail.com', 'berkeley')
-	if result:
-		print "success"
-	else:
-		print result
-
-def add_data(careId, key, value, date):
-	rips = RequestsIPS()
-	result = rips.add_data(careId, key, value, date)
-	if result:
-		print "success"
-	else:
-		print result
-
-def get_data(careId, key):
-	rips = RequestsIPS()
-	result = rips.get_data(careId, key)
-	return result.json()
-
-def valid_login(username, password):
-	return True
-
-def log_the_user_in(username):
-	pass
+def createDummyData():
+	input_db['ramit']=[{'12515':{'text':'this is crazy','userid':'ramit'}},{'14241':{'text':'what the hell?','userid':'ramit'}},{'16241':{'text':'this is a test','userid':'ramit'}}]
+	input_db['tim']=[{'12517':{'text':'shit is mad','userid':'tim'}},{'14241':{'text':'hell breaks lose','userid':'tim'}},{'16141':{'text':'testing this shit','userid':'tim'}}]
+	input_db['pablo']=[{'12517':{'text':'insanity is calling','userid':'pablo'}},{'14224':{'text':'armageddon and hell','userid':'pablo'}},{'16141':{'text':'testing one two three','userid':'pablo'}}]
 
 app.secret_key = '*\xd6\xe8T\xd7\xdc9\xcb\xbb\x9e/\xc1\xf5\xbas\x94s\xb6,\xbaB\xfcS!'
 
