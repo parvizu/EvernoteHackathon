@@ -3,6 +3,9 @@ from flask import Flask
 from flask import render_template
 from flask import make_response
 from flask import session, redirect, url_for, request, escape
+from flask import make_response, current_app, jsonify
+from datetime import timedelta
+from functools import update_wrapper
 
 import calendar
 import datetime
@@ -23,7 +26,7 @@ from evernote.edam.notestore.ttypes import NoteFilter, NotesMetadataResultSpec
 from evernote.api.client import EvernoteClient
 
 import oauth2 as oauth
-
+import shelve
 
 app = Flask(__name__)
 app.debug = True
@@ -77,12 +80,61 @@ def get_userstore():
     userStore = UserStore.Client(userStoreProtocol)
     return userStore
 
+def store_group_user_assoc(group_id, user_id, assoc_metadata):
+	d = shelve.open('shelve.db')
+	user_data = { user_id : assoc_metadata }
+	if not d.has_key(group_id):
+		d[group_id] = []
+	d[group_id].append(user_data)
+
+def crossdomain(origin=None, methods=None, headers=None, max_age=21600, attach_to_all=True, automatic_options=True):  
+    if methods is not None:
+        methods = ', '.join(sorted(x.upper() for x in methods))
+    if headers is not None and not isinstance(headers, basestring):
+        headers = ', '.join(x.upper() for x in headers)
+    if not isinstance(origin, basestring):
+        origin = ', '.join(origin)
+    if isinstance(max_age, timedelta):
+        max_age = max_age.total_seconds()
+
+    def get_methods():
+        if methods is not None:
+            return methods
+
+        options_resp = current_app.make_default_options_response()
+        return options_resp.headers['allow']
+
+    def decorator(f):
+        def wrapped_function(*args, **kwargs):
+            if automatic_options and request.method == 'OPTIONS':
+                resp = current_app.make_default_options_response()
+            else:
+                resp = make_response(f(*args, **kwargs))
+            if not attach_to_all and request.method != 'OPTIONS':
+                return resp
+
+            h = resp.headers
+
+            h['Access-Control-Allow-Origin'] = origin
+            h['Access-Control-Allow-Methods'] = get_methods()
+            h['Access-Control-Max-Age'] = str(max_age)
+            if headers is not None:
+                h['Access-Control-Allow-Headers'] = headers
+            return resp
+
+        f.provide_automatic_options = False
+        return update_wrapper(wrapped_function, f)
+    return decorator
 
 @app.route('/')
 def index():
-    index_str = '<p><a href="/auth">Authorize this application</a></p>'
-    index_str += '<p><a href="/notebook">View a notebook name</a></p>'
-    return index_str
+    return render_template('index.html')
+
+@app.route('/enter_group', methods=['POST'])
+@crossdomain(origin='*')
+def enter_group():
+	print request.form['groupid']
+	return jsonify(groupid=5)
 
 
 #@app.route('/')
@@ -123,6 +175,10 @@ def auth_start():
     # Redirect the user to the Evernote authorization URL
     return redirect('%s?oauth_token=%s' % (EN_AUTHORIZE_URL,
         urllib.quote(session['oauth_token'])))
+
+@app.route('/save_user_data',methods=['POST'])
+def save_user_data():
+	return "Saved"
 
 
 @app.route('/authComplete')
@@ -174,6 +230,7 @@ def default_notbook():
     notes = noteStore.findNotesMetadata(authToken, nfilter, 0, 100, result_spec)
     print notes
     for note in notes.notes:
+<<<<<<< HEAD
      if note.guid == "e00c1b8b-cc4f-48b5-bdbb-5f6069dbbc4a":
       fullnote = noteStore.getNote(authToken,note.guid,True,True,True,True)
       resources = fullnote.resources
