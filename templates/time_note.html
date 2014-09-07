@@ -1,0 +1,15 @@
+<html>
+<body>
+	<br/><br/>
+	<table border="1">
+		{% for note_frag in note_frags %}
+		<tr>
+			<td>{{ note_frag['timestamp'] }}</td>
+			<td>{{ note_frag['userid'] }}</td>
+			<td>{{ note_frag['text'] }}</td>
+		</tr>
+    	{% endfor %}
+	</table>
+			
+</body>
+</html>
