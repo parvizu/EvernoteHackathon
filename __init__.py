@@ -235,10 +235,22 @@ def default_notbook():
 
 @app.route('/save_user_data',methods=['POST'])
 def save_user_data():
-	print request.json
-	input_db = json.dumps(request.json)
-	#return "ok"
+    userid = request.json.keys()[0]
+    timestamp = request.json[userid].keys()[0]
+    input_db[timestamp] = request.json
+    return "OK"
 
+@app.route('/time_note')
+def time_note():
+    notes_frags = []
+    for timestamp in input_db:
+        json = input_db[timestamp]
+        userid = json.keys()[0]
+        timestamp = json[userid].keys()[0]
+        text = json[userid][timestamp]["text"]
+        notes_frags.append({ "userid": userid, "timestamp": timestamp, "text": text })
+    notes_frags.sort(key=lambda x: len(x), reverse=True)
+    return render_template('time_note.html', note_frags=notes_frags)
 
 def mergeByTimeStamp():
     createDummyData()
