@@ -30,8 +30,6 @@ $(document).ready(function() {
 		currentText ="&&%%$$";
 		$('#btn_session_end').hide();
 		$('#btn_session_start').show();
-
-		//sendData();
 	})
 
 	
@@ -129,26 +127,6 @@ function sendEntry(entry)
 		data: JSON.stringify(entry),
 		success: function(data) {
 			console.log(data);
-		}
-	})
-}
-
-function sendData()
-{
-	var newData ={}
-
-	newData[$(".User-nameText").text()] = log;
-	console.log("DATA SENT")
-	console.log(JSON.stringify(newData));
-	$.ajax({
-		url: "http://timenote.herokuapp.com/save_user_data",
-		type: "POST",
-		contentType: 'application/json; charset=utf-8',
-		dataType: 'json',
-		data: JSON.stringify(newData),
-		success: function(data) {
-			console.log(data);
-			log = '';
 		}
 	})
 }

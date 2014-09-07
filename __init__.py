@@ -244,11 +244,13 @@ def save_user_data():
 def time_note():
     notes_frags = []
     for timestamp in input_db:
+        print "--------"
         json = input_db[timestamp]
-        userid = json.keys()[0]
-        timestamp = json[userid].keys()[0]
-        text = json[userid][timestamp]["text"]
-        notes_frags.append({ "userid": userid, "timestamp": timestamp, "text": text })
+        timestamp = json.keys()[0]
+        userid = json[timestamp]['userid']
+        text = json[timestamp]['text']
+        obj = { "userid": userid, "timestamp": timestamp, "text": text }
+        notes_frags.append(obj)
     notes_frags.sort(key=lambda x: len(x), reverse=True)
     return render_template('time_note.html', note_frags=notes_frags)
 
