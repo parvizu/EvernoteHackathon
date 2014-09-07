@@ -13,7 +13,7 @@ $(document).ready(function() {
 	$('body').prepend("<div style='position: absolute;left:200px;z-index:100;'>Enter Group Session ID: <input id='session_id' type='text' width='200'><input id='btn_session_start' type='button' value='Start'><input id='btn_session_end' type='button' value='Stop' style='display:none;'></div>");
 
 	$('#btn_session_start').click(function() {
-		$.post('http://127.0.0.1:5000/enter_group', { groupid: $('#session_id').val() }, function( data ) {
+		$.post('http://timenote.herokuapp.com/enter_group', { groupid: $('#session_id').val() }, function( data ) {
 			console.log(data);
 			startTime = $.now();
 			setTimeout(function() {
@@ -122,7 +122,7 @@ function sendEntry(entry)
 {
 	console.log(JSON.stringify(entry));
 	$.ajax({
-		url: "http://127.0.0.1:5000/save_user_data",
+		url: "http://timenote.herokuapp.com/save_user_data",
 		type: "POST",
 		contentType: 'application/json; charset=utf-8',
 		dataType: 'json',
@@ -141,7 +141,7 @@ function sendData()
 	console.log("DATA SENT")
 	console.log(JSON.stringify(newData));
 	$.ajax({
-		url: "http://127.0.0.1:5000/save_user_data",
+		url: "http://timenote.herokuapp.com/save_user_data",
 		type: "POST",
 		contentType: 'application/json; charset=utf-8',
 		dataType: 'json',

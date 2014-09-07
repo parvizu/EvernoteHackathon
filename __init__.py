@@ -157,7 +157,7 @@ def auth_start():
     client = get_oauth_client()
 
     # Make the request for the temporary credentials (Request Token)
-    callback_url = 'http://%s%s' % ('127.0.0.1:5000', url_for('auth_finish'))
+    callback_url = 'http://%s%s' % ('timenote.herokuapp.com', url_for('auth_finish'))
     request_url = '%s?oauth_callback=%s' % (EN_REQUEST_TOKEN_URL,
         urllib.quote(callback_url))
 
